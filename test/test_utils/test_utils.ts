@@ -135,4 +135,5 @@ export async function loginAs(page: Page, user: MockUser) {
   await page.getByRole("textbox", { name: "Email address" }).fill(user.email);
   await page.getByRole("textbox", { name: "Password" }).fill(user.password);
   await page.getByRole("button", { name: "Login" }).click();
+  await expect(page.getByRole("link", { name: user.shortenedName })).toBeVisible();
 }
