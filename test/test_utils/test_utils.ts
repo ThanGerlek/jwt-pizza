@@ -8,7 +8,7 @@ export type MockUser = {
   email: string;
   password: string;
   shortenedName: string;
-  roles: Record<'role',Role>[]
+  roles: Record<any, any>[];
 };
 
 export const mockUsers: Record<string, MockUser> = {
@@ -26,7 +26,7 @@ export const mockUsers: Record<string, MockUser> = {
     shortenedName: "TF",
     email: "test.franchisee@jwt.com",
     password: "testfranchisee",
-    roles: [{ role: Role.Franchisee }],
+    roles: [{ role: Role.Diner }, { role: Role.Franchisee, objectId: 1 }],
   },
   diner: {
     id: "2",
@@ -39,7 +39,7 @@ export const mockUsers: Record<string, MockUser> = {
 };
 
 const mockUserFromEmail = Object.fromEntries(
-  Object.values(mockUsers).map(user => [user.email, user])
+  Object.values(mockUsers).map((user) => [user.email, user]),
 );
 
 export async function mockServiceRoutes(page: Page) {
@@ -129,11 +129,25 @@ export async function basicInit(page: Page) {
   await mockServiceRoutes(page);
 }
 
-export async function loginAs(page: Page, user: MockUser) {
+async function loginAs(page: Page, user: MockUser) {
   await page.goto("/");
   await page.getByRole("link", { name: "Login" }).click();
   await page.getByRole("textbox", { name: "Email address" }).fill(user.email);
   await page.getByRole("textbox", { name: "Password" }).fill(user.password);
   await page.getByRole("button", { name: "Login" }).click();
-  await expect(page.getByRole("link", { name: user.shortenedName })).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: user.shortenedName }),
+  ).toBeVisible();
+}
+
+export async function loginAsDiner(page: Page) {
+  await loginAs(page, mockUsers.diner);
+}
+
+export async function loginAsFranchisee(page: Page) {
+  await loginAs(page, mockUsers.franchisee);
+}
+
+export async function loginAsAdmin(page: Page) {
+  await loginAs(page, mockUsers.admin);
 }

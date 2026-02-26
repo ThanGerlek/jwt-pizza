@@ -1,5 +1,5 @@
 import { expect, test } from "playwright-test-coverage";
-import { basicInit, loginAs, mockUsers } from "./test_utils/test_utils";
+import { basicInit, loginAsDiner, mockUsers } from "./test_utils/test_utils";
 import { Page } from "@playwright/test";
 
 async function createOrderAndCheckout(page: Page) {
@@ -56,7 +56,7 @@ test("purchase before login", async ({ page }) => {
 test("purchase after login", async ({ page }) => {
   await basicInit(page);
 
-  await loginAs(page, mockUsers.diner);
+  await loginAsDiner(page);
   await createOrderAndCheckout(page);
 
   await pay(page);
@@ -64,7 +64,7 @@ test("purchase after login", async ({ page }) => {
 
 test("cancel purchase", async ({ page }) => {
   await basicInit(page);
-  await loginAs(page, mockUsers.diner);
+  await loginAsDiner(page);
 
   await createOrderAndCheckout(page);
 

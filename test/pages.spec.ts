@@ -1,5 +1,5 @@
 import { expect, test } from "playwright-test-coverage";
-import { basicInit, loginAs, mockUsers } from './test_utils/test_utils';
+import { basicInit } from "./test_utils/test_utils";
 
 test("not found", async ({ page }) => {
   await basicInit(page);
