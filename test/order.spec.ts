@@ -8,7 +8,15 @@ async function createOrderAndCheckout(page: Page) {
 
   // Create order
   await expect(page.locator("h2")).toContainText("Awesome is a click away");
-  await page.getByRole("combobox").selectOption("4");
+  // Select an available store (first real option after the placeholder).
+  const storeSelect = page.getByRole("combobox");
+  const firstStoreOption = storeSelect.locator("option").nth(1);
+  const firstStoreValue = await firstStoreOption.getAttribute("value");
+  if (!firstStoreValue) {
+    expect("no stores were found").toBe("at least one available store");
+    return;
+  }
+  await storeSelect.selectOption(firstStoreValue);
   await page.getByRole("link", { name: "Image Description Veggie A" }).click();
   await page.getByRole("link", { name: "Image Description Pepperoni" }).click();
   await expect(page.locator("form")).toContainText("Selected pizzas: 2");

@@ -36,6 +36,6 @@ test("login as admin", async ({ page }) => {
 test("admin dashboard", async ({ page }) => {
   await basicInit(page);
   await loginAsAdmin(page);
-  await page.getByRole("button", { name: "Admin" }).click();
+  await page.getByRole("link", { name: "Admin" }).click();
   await expect(page.getByRole("main")).toContainText("Mama Ricci's kitchen");
 });

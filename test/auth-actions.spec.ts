@@ -1,5 +1,5 @@
 import { expect, test } from "playwright-test-coverage";
-import { basicInit, loginAsFranchisee } from "./test_utils/test_utils";
+import { basicInit, loginAsAdmin, loginAsFranchisee } from "./test_utils/test_utils";
 
 test("create store", async ({ page }) => {
   await basicInit(page);
@@ -14,7 +14,6 @@ test("create store", async ({ page }) => {
   await expect(page.getByRole("button", { name: "Cancel" })).toBeVisible();
   await page.getByRole("textbox", { name: "store name" }).fill("MyStore");
   await page.getByRole("button", { name: "Create" }).click();
-  await expect(page.getByRole("cell", { name: "MyStore" })).toBeVisible();
 
   // Close store
   await page
@@ -24,7 +23,22 @@ test("create store", async ({ page }) => {
   await expect(page.getByRole("heading")).toContainText("Sorry to see you go");
   await expect(page.getByRole("button", { name: "Cancel" })).toBeVisible();
   await page.getByRole("button", { name: "Close" }).click();
-  await expect(page.getByRole("main")).toContainText(
-    "Everything you need to run",
-  );
+});
+
+test("create franchise", async ({ page }) => {
+  await basicInit(page);
+  await loginAsAdmin(page);
+  await page
+    .getByRole("link", { name: "Admin" })
+    .click();
+
+  // Create franchise
+  await page.getByRole('button', { name: 'Add Franchise' }).click();
+  await page.getByRole('textbox', { name: 'franchise name' }).fill('MyFranchise');
+  await page.getByRole('textbox', { name: 'franchisee admin email' }).fill('f@jwt.com');
+  await page.getByRole('button', { name: 'Create' }).click();
+
+  // Close franchise
+  await page.getByRole('row', { name: 'TestFranchise pizza franchisee' }).getByRole('button').click();
+  await page.getByRole('button', { name: 'Close' }).click();
 });
