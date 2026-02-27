@@ -4,11 +4,25 @@ import {
   loginAsDiner,
   loginAsFranchisee,
   loginAsAdmin,
+  mockUsers,
 } from "./test_utils/test_utils";
 
 test("login as diner", async ({ page }) => {
   await basicInit(page);
   await loginAsDiner(page);
+});
+
+test("register diner", async ({ page }) => {
+  const user = mockUsers.diner;
+  await page.goto("/");
+  await page.getByRole("link", { name: "Register" }).click();
+  await page.getByRole("textbox", { name: "Full name" }).fill(user.name);
+  await page.getByRole("textbox", { name: "Email address" }).fill(user.email);
+  await page.getByRole("textbox", { name: "Password" }).fill(user.password);
+  await page.getByRole("button", { name: "Register" }).click();
+  await expect(
+    page.getByRole("link", { name: user.shortenedName }),
+  ).toBeVisible();
 });
 
 test("login as franchisee", async ({ page }) => {
