@@ -5,6 +5,21 @@ import { MockUser, mockUserFromEmail } from "./test_utils";
 export async function mockServiceRoutes(page: Page) {
   let loggedInUser: MockUser | undefined;
 
+  type FranchiseStore = { id: number; name: string; totalRevenue: number };
+  type FranchiseState = {
+    id: number;
+    name: string;
+    admins: { id: number; name: string; email: string }[];
+    stores: FranchiseStore[];
+  };
+
+  let franchiseState: FranchiseState = {
+    id: 1,
+    name: "TestFranchise",
+    admins: [{ id: 4, name: "pizza franchisee", email: "f@jwt.com" }],
+    stores: [{ id: 1, name: "TestStore", totalRevenue: 0 }],
+  };
+
   // Authorize login for the given user
   await page.route("*/**/api/auth", async (route: any) => {
     const method = route.request().method();
@@ -105,6 +120,17 @@ export async function mockServiceRoutes(page: Page) {
   await page.route(/\/api\/franchise\/\d+\/store\/\d+$/, async (route: any) => {
     const method = route.request().method();
     expect(method).toBe("DELETE");
+
+    const url = route.request().url();
+    const match = url.match(/\/api\/franchise\/\d+\/store\/(\d+)$/);
+    const storeId = match ? parseInt(match[1], 10) : undefined;
+    if (storeId != null && !Number.isNaN(storeId)) {
+      franchiseState = {
+        ...franchiseState,
+        stores: franchiseState.stores.filter((s) => s.id !== storeId),
+      };
+    }
+
     await route.fulfill({ json: { message: "store deleted" } });
   });
 
@@ -114,10 +140,19 @@ export async function mockServiceRoutes(page: Page) {
     expect(method).toBe("POST");
 
     const storeReq = route.request().postDataJSON();
-    const createdStore = {
-      id: 10,
+    const newId =
+      franchiseState.stores.length > 0
+        ? Math.max(...franchiseState.stores.map((s) => s.id)) + 1
+        : 1;
+    const createdStore: FranchiseStore = {
+      id: newId,
       name: storeReq.name ?? "New Store",
       totalRevenue: 0,
+    };
+
+    franchiseState = {
+      ...franchiseState,
+      stores: [...franchiseState.stores, createdStore],
     };
 
     await route.fulfill({ json: createdStore });
@@ -129,13 +164,7 @@ export async function mockServiceRoutes(page: Page) {
 
     if (method === "GET") {
       await route.fulfill({
-        json: [
-          {
-            id: 1,
-            name: "TestFranchise",
-            stores: [{ id: 1, name: "TestStore", totalRevenue: 0 }],
-          },
-        ],
+        json: [franchiseState],
       });
       return;
     }
@@ -157,25 +186,7 @@ export async function mockServiceRoutes(page: Page) {
 
     if (method === "GET") {
       const franchiseRes = {
-        franchises: [
-          {
-            id: 2,
-            name: "LotaPizza",
-            admins: [{ id: 4, name: "pizza franchisee", email: "f@jwt.com" }],
-            stores: [
-              { id: 4, name: "Lehi", totalRevenue: 0 },
-              { id: 5, name: "Springville", totalRevenue: 0 },
-              { id: 6, name: "American Fork", totalRevenue: 0 },
-            ],
-          },
-          {
-            id: 3,
-            name: "PizzaCorp",
-            admins: [],
-            stores: [{ id: 7, name: "Spanish Fork", totalRevenue: 0 }],
-          },
-          { id: 4, name: "topSpot", admins: [], stores: [] },
-        ],
+        franchises: [franchiseState],
         more: true,
       };
       await route.fulfill({ json: franchiseRes });
