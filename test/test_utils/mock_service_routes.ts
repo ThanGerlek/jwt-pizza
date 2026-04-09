@@ -29,7 +29,10 @@ export async function mockServiceRoutes(page: Page) {
       const loginReq = route.request().postDataJSON();
       const user = mockUserFromEmail[loginReq.email];
       if (!user || user.password !== loginReq.password) {
-        await route.fulfill({ status: 401, json: { error: "Unauthorized" } });
+        await route.fulfill({
+          status: 401,
+          json: { error: "Unauthorized" },
+        });
         return;
       }
       loggedInUser = mockUserFromEmail[loginReq.email];
