@@ -5,6 +5,7 @@ import { pizzaService } from "../service/service";
 import { useBreadcrumb } from "../hooks/appNavigation";
 import View from "./view";
 import { User } from "../service/pizzaService";
+import { registerErrorMessage } from "../utils/apiErrorMessage";
 
 interface Props {
   setUser: (user: User) => void;
@@ -30,7 +31,7 @@ export default function Register(props: Props) {
       props.setUser(await pizzaService.register(name, email, password));
       navigateToParentPath();
     } catch (error) {
-      displayMessage(JSON.stringify(error));
+      displayMessage(registerErrorMessage(error));
     }
   }
 

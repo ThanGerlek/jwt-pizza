@@ -4,19 +4,33 @@ import { pizzaService } from "../service/service";
 import View from "./view";
 import Button from "../components/button";
 import { useBreadcrumb } from "../hooks/appNavigation";
+import { franchiseCloseErrorMessage } from "../utils/apiErrorMessage";
 
 export default function CloseFranchise() {
   const state = useLocation().state;
   const navigateToParentPath = useBreadcrumb();
+  const [errMessage, setErrMessage] = React.useState("");
 
   async function close() {
-    await pizzaService.closeFranchise(state.franchise);
-    navigateToParentPath();
+    try {
+      await pizzaService.closeFranchise(state.franchise);
+      navigateToParentPath();
+    } catch (e: unknown) {
+      setErrMessage(franchiseCloseErrorMessage(e));
+    }
   }
 
   return (
     <View title="Sorry to see you go">
       <div className="text-start py-8 px-4 sm:px-6 lg:px-8">
+        {errMessage ? (
+          <div
+            className="text-orange-700 bg-yellow-100 p-2 rounded-md mb-4"
+            role="alert"
+          >
+            {errMessage}
+          </div>
+        ) : null}
         <div className="text-neutral-100">
           Are you sure you want to close the{" "}
           <span className="text-orange-500">{state.franchise.name}</span>{" "}

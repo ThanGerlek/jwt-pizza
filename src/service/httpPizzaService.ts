@@ -15,46 +15,106 @@ import {
 const pizzaServiceUrl = import.meta.env.VITE_PIZZA_SERVICE_URL;
 const pizzaFactoryUrl = import.meta.env.VITE_PIZZA_FACTORY_URL;
 
+function resolvePath(path: string): string {
+  if (path.startsWith("http")) {
+    return path;
+  }
+  return pizzaServiceUrl + path;
+}
+
+/** Login (PUT) and register (POST) must not send a stale Bearer token. */
+function isAuthLoginOrRegister(resolvedPath: string, method: string): boolean {
+  try {
+    const u = new URL(resolvedPath);
+    return (
+      u.pathname.endsWith("/api/auth") &&
+      (method === "POST" || method === "PUT")
+    );
+  } catch {
+    return (
+      resolvedPath.includes("/api/auth") &&
+      (method === "POST" || method === "PUT")
+    );
+  }
+}
+
+async function parseJsonBody(r: Response): Promise<any> {
+  const text = await r.text();
+  if (!text) {
+    return {};
+  }
+  try {
+    return JSON.parse(text);
+  } catch {
+    return { message: text.slice(0, 200) };
+  }
+}
+
+export type ApiError = {
+  code: number;
+  message: string;
+  retryAfter?: string;
+};
+
 class HttpPizzaService implements PizzaService {
   async callEndpoint(
     path: string,
     method: string = "GET",
     body?: any,
   ): Promise<any> {
-    return new Promise(async (resolve, reject) => {
-      try {
-        const options: any = {
-          method: method,
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-        };
+    const resolvedPath = resolvePath(path);
+    const options: RequestInit = {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "omit",
+    };
 
-        const authToken = localStorage.getItem("token")?.trim();
-        if (authToken) {
-          (options.headers as Record<string, string>)["Authorization"] = `Bearer ${authToken}`;
-        }
+    const authToken = localStorage.getItem("token")?.trim();
+    const sendAuth =
+      !!authToken && !isAuthLoginOrRegister(resolvedPath, method);
+    if (sendAuth) {
+      (options.headers as Record<string, string>)["Authorization"] =
+        `Bearer ${authToken}`;
+    }
 
-        if (body) {
-          options.body = JSON.stringify(body);
-        }
+    if (body) {
+      options.body = JSON.stringify(body);
+    }
 
-        if (!path.startsWith("http")) {
-          path = pizzaServiceUrl + path;
-        }
+    try {
+      const r = await fetch(resolvedPath, options);
+      const j = await parseJsonBody(r);
 
-        const r = await fetch(path, options);
-        const j = await r.json();
-        if (r.ok) {
-          resolve(j);
-        } else {
-          reject({ code: r.status, message: j.message });
-        }
-      } catch (e: any) {
-        reject({ code: 500, message: e.message });
+      if (r.ok) {
+        return j;
       }
-    });
+
+      const message =
+        typeof j?.message === "string"
+          ? j.message
+          : `Request failed (${r.status})`;
+      const err: ApiError = { code: r.status, message };
+
+      if (r.status === 429) {
+        const ra = r.headers.get("Retry-After");
+        if (ra) {
+          err.retryAfter = ra;
+        }
+      }
+
+      if (r.status === 401 && sendAuth) {
+        localStorage.removeItem("token");
+      }
+
+      return Promise.reject(err);
+    } catch (e: any) {
+      return Promise.reject({
+        code: 500,
+        message: e?.message ?? "Network error",
+      } as ApiError);
+    }
   }
 
   async login(email: string, password: string): Promise<User> {

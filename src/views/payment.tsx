@@ -4,6 +4,7 @@ import View from "./view";
 import Button from "../components/button";
 import { pizzaService } from "../service/service";
 import { Order, OrderItem } from "../service/pizzaService";
+import { orderPlaceErrorMessage } from "../utils/apiErrorMessage";
 
 export default function Payment() {
   const [errMessage, setErrorMessage] = React.useState("");
@@ -27,8 +28,8 @@ export default function Payment() {
       navigate("/delivery", {
         state: { order: confirmation.order, jwt: confirmation.jwt },
       });
-    } catch (err: any) {
-      setErrorMessage(err.message);
+    } catch (err: unknown) {
+      setErrorMessage(orderPlaceErrorMessage(err));
     }
   }
 

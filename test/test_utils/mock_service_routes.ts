@@ -31,7 +31,7 @@ export async function mockServiceRoutes(page: Page) {
       if (!user || user.password !== loginReq.password) {
         await route.fulfill({
           status: 401,
-          json: { error: "Unauthorized" },
+          json: { message: "invalid credentials" },
         });
         return;
       }
