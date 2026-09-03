@@ -18,19 +18,19 @@
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "autoprefixer": "^10.4.19",
-    "nyc": "^17.1.0",
+    "nyc": "^18.0.0",
     "playwright": "^1.58.0",
     "playwright-test-coverage": "^1.2.12",
-    "postcss": "^8.4.38",
-    "tailwindcss": "^3.4.3",
+    "postcss": "^8.5.28",
+    "tailwindcss": "^4.3.3",
     "typescript": "^5.5.4",
-    "vite": "^5.2.8",
-    "vite-plugin-istanbul": "^7.2.1"
+    "vite": "^8.2.2",
+    "vite-plugin-istanbul": "^9.0.1"
   },
   "dependencies": {
     "preline": "^2.1.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.22.3"
+    "react-router-dom": "^7.18.3"
   }
 }
